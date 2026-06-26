@@ -98,7 +98,6 @@ if st.button("🔥 هندسة دليل المقابلة التنفيذي"):
                         temperature=0.1
                     )
                     
-                    # قراءة النص الذي يحتوي على الـ HTML وعرضه حياً ومقفل بالـ [0]
                     html_content = chat_completion.choices[0].message.content
                     st.markdown(html_content, unsafe_allow_html=True)
                     
