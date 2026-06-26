@@ -6,14 +6,11 @@ st.set_page_config(page_title="Vetly AI", page_icon="🎯", layout="wide")
 st.title("🎯 Vetly AI")
 st.subheader("منظومة فرز وتوليد الأسئلة الفخاخ لكشف خبرة المرشحين عبر ملفات الـ PDF مباشرة")
 
-if 'API_e' in globals() or 'API_e' in locals():
-    client = Groq(api_key=API_e)
-else:
-    try:
-        client = Groq(api_key=st.secrets["API_e"])
-    except:
-        st.error("خطأ تكتيكي: المتغير السري API_e غير معرف في بيئة العمل!")
-        st.stop()
+try:
+    client = Groq(api_key=st.secrets["API_e"])
+except Exception as e:
+    st.error("خطأ تكتيكي: المتغير السري API_e غير معرف في الـ Secrets!")
+    st.stop()
 
 def extract_text_from_pdf(pdf_file):
     try:
@@ -26,13 +23,6 @@ def extract_text_from_pdf(pdf_file):
         return text
     except Exception as e:
         return ""
-
-def save_lead_email(email):
-    if email and "@" in email:
-        with open("vetly_leads.txt", "a", encoding="utf-8") as f:
-            f.write(email + "\n")
-        return True
-    return False
 
 st.sidebar.header("🛠️ معايير فرز المقابلة")
 job_description = st.sidebar.text_area("وصف متطلبات الوظيفة المستهدفة (Job Description):", 
@@ -65,7 +55,7 @@ if st.button("➕ إضافة مرشح آخر للمقابلة المتقاطعة
 
 if st.button("🔥 هندسة دليل الأسئلة الفخاخ فوراً"):
     if not job_description:
-        st.warning("الرجاء إدخل وصف الوظيفة أولاً في اللوحة الجانبية.")
+        st.warning("الرجاء إدخال وصف الوظيفة أولاً في اللوحة الجانبية.")
     else:
         st.write("### 🎯 دليل الأسئلة المخفية الجاهز للمدير:")
         
@@ -76,12 +66,12 @@ if st.button("🔥 هندسة دليل الأسئلة الفخاخ فوراً"):
         
         for person in candidates_data:
             if person["file"] is not None:
-                with st.spinner(f"جاري قراء الـ PDF وهندسة الفخاخ لـ {person['name']}..."):
+                with st.spinner(f"جاري قراءة الـ PDF وهندسة الفخاخ لـ {person['name']}..."):
                     
                     cv_text = extract_text_from_pdf(person["file"])
                     
                     if not cv_text:
-                        st.error(f"فشل استخراج النص من ملف {person['name']}. تأكد أن الملف ليس تالفاً أو عبارة عن صورة.")
+                        st.error(f"فشل استخراج النص من ملف {person['name']}. تأكد أن الملف ليس تالفاً.")
                         continue
                     
                     user_instruction = f"""
@@ -108,12 +98,4 @@ if st.button("🔥 هندسة دليل الأسئلة الفخاخ فوراً"):
                     
                     st.info(chat_completion.choices[0].message.content)
                     
-        st.success("تم توليد الأسئلة بنجاح!")
-        st.write("#### 🔒 فتح ميزة تحميل 'دليل المدير التنفيذي للمقابلات' (PDF)")
-        lead_email = st.text_input("أدخل بريدك الإلكتروني التجاري لفك قفل تحميل ملف الـ PDF الجاهز للاجتماع:")
-        
-        if st.button("تحميل وثيقة المقابلة الرسمية"):
-            if save_lead_email(lead_email):
-                st.success("تم تسجيل إيميلك بنجاح في قاعدة بيانات Vetly AI! جاري إعداد وتصدير ملف الـ PDF الفخم...")
-            else:
-                st.error("الرجاء إدخال بريد إلكتروني حقيقي وصحيح لفك القفل.")
+        st.success("تم توليد الأسئلة بنجاح! الأداة مفتوحة بالكامل لك مجاناً.")
