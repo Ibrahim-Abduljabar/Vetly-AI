@@ -164,6 +164,6 @@ if st.button("🔥 هندسة دليل المقابلة التنفيذي"):
                         st.markdown(html_output, unsafe_allow_html=True)
                         
                     except Exception as json_err:
-                        st.text(chat_completion.choices.message.content)
+                        st.text(chat_completion.choices[0].message.content)
                         
         st.success("تم توليد التقييم الفني بنجاح! يمكنك الآن الضغط على (Ctrl + P) لطباعة الدليل أو حفظه كـ PDF من متصفحك مباشرة بشكل منسق!")
