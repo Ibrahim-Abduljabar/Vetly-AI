@@ -98,7 +98,7 @@ if st.button("🔥 هندسة دليل الأسئلة الفخاخ فوراً"):
                     """
                     
                     chat_completion = client.chat.completions.create(
-                        model="llama3.3-70b-versatile",
+                        model="llama-3.3-70b-versatile",
                         messages=[
                             {"role": "system", "content": system_instruction},
                             {"role": "user", "content": user_instruction}
