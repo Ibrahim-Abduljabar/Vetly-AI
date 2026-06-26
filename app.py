@@ -1,7 +1,6 @@
 import streamlit as st
 from groq import Groq 
 import pypdf
-from fpdf import FPDF
 
 st.set_page_config(page_title="Vetly AI", page_icon="🎯", layout="wide")
 st.title("🎯 Vetly AI")
@@ -24,22 +23,6 @@ def extract_text_from_pdf(pdf_file):
         return text
     except:
         return ""
-
-def generate_pdf_report(report_text):
-    pdf = FPDF()
-    pdf.add_page()
-    pdf.set_margins(15, 15, 15)
-    
-    pdf.set_font("Helvetica", size=12)
-    
-    lines = report_text.split('\n')
-    for line in lines:
-        # استبدال الإيموجي أو الرموز الغريبة لضمان عدم تعطل دالة fpdf
-        clean_line = line.encode('latin-1', 'ignore').decode('latin-1')
-        pdf.multi_cell(0, 8, txt=clean_line)
-        pdf.ln(2)
-        
-    return pdf.output(dest='S')
 
 st.sidebar.header("🛠️ معايير تقييم المقابلة")
 job_description = st.sidebar.text_area("وصف متطلبات الوظيفة المستهدفة (Job Description):", 
@@ -72,11 +55,51 @@ if st.button("🔥 هندسة دليل المقابلة التنفيذي"):
     if not job_description:
         st.warning("الرجاء إدخال وصف الوظيفة أولاً في اللوحة الجانبية.")
     else:
-        full_report_content = "VETLY AI - EXECUTIVE INTERVIEW GUIDE\n=================================\n\n"
+        html_style = """
+        <style>
+            .candidate-box {
+                background-color: #f8f9fa;
+                border-right: 5px solid #007bff;
+                padding: 20px;
+                border-radius: 5px;
+                margin-bottom: 25px;
+                direction: rtl;
+                text-align: right;
+                font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+                box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+            }
+            .candidate-name {
+                color: #007bff;
+                font-size: 22px;
+                font-weight: bold;
+                margin-bottom: 15px;
+                border-bottom: 1px solid #dee2e6;
+                padding-bottom: 5px;
+            }
+            .question-item {
+                background-color: #ffffff;
+                padding: 12px;
+                border-radius: 4px;
+                margin-bottom: 10px;
+                border: 1px solid #e9ecef;
+            }
+            .q-text {
+                font-weight: bold;
+                color: #212529;
+                margin-bottom: 5px;
+            }
+            .a-text {
+                color: #28a745;
+                font-style: italic;
+            }
+        </style>
+        """
+        st.markdown(html_style, unsafe_allow_html=True)
+        st.write("### 🎯 دليل الأسئلة المخفية الجاهز للمدير:")
         
         system_instruction = """
         أنت مستشار توظيف تقني أول ومسؤول الفرز الفني في كبرى مجموعات الاستثمار العالمية. مهمتك هي تحليل السيرة الذاتية بدقة ومقارنتها بالوظيفة، واستخراج أسئلة فنية عميقة ومباغتة (Structural Interview Questions) لكشف عمق المعرفة الحقيقية للمرشح وتحديد ما إذا كان يملك خبرة عملية فعلية أم مجرد معلومات سطحية.
-        اجعل أسلوب الصياغة احترافياً، صارماً، وخالياً تماماً من الألفاظ الطفولية أو الكلمات الهزلية مثل 'فخ'. قدم السؤال الفني متبوعاً مباشرة بالإجابة النموذجية القاطعة المختصرة التي تثبت كفاءة المرشح.
+        اجعل أسلوب الصياغة احترافياً، صارماً، وخالياً تماماً من الألفاظ الطفولية. قدم السؤال الفني متبوعاً مباشرة بالإجابة النموذجية القاطعة المختصرة التي تثبت كفاءة المرشح.
         """
         
         for person in candidates_data:
@@ -89,16 +112,18 @@ if st.button("🔥 هندسة دليل المقابلة التنفيذي"):
                         continue
                     
                     user_instruction = f"""
-                    قم بتوليد عدد ({num_questions}) أسئلة فنية متقدمة بمستوى ({difficulty_level}).
+                    قم بتوليد عدد ({num_questions}) أسئلة فنية متقدمة بمستوى ({difficulty_level}) للمرشح ({person['name']}).
+                    بناءً على السيرة الذاتية المستخرجة: {cv_text}
+                    ومتطلبات الوظيفة: {job_description}
                     
-                    المرشح: {person['name']}
-                    السيرة الذاتية المستخرجة: {cv_text}
-                    متطلبات الوظيفة: {job_description}
-                    
-                    التنسيق المطلق للمخرجات (باللغة العربية الاحترافية):
-                    Candidate: [اسم المرشح]
-                    Question [الرقم]: [نص السؤال الفني المتقدم]
-                    Model Answer: [الرد التقني الحاسم المتوقع]
+                    يجب أن تصيغ المخرجات بتنسيق JSON النظيف التالي فقط (بدون أي نصوص خارج القوسين):
+                    {{
+                        "candidate_name": "{person['name']}",
+                        "questions": [
+                            {{"q": "نص السؤال الأول", "a": "نص الإجابة النموذجية الأولى"}},
+                            {{"q": "نص السؤال الثاني", "a": "نص الإجابة النموذجية الثانية"}}
+                        ]
+                    }}
                     """
                     
                     chat_completion = client.chat.completions.create(
@@ -107,23 +132,29 @@ if st.button("🔥 هندسة دليل المقابلة التنفيذي"):
                             {"role": "system", "content": system_instruction},
                             {"role": "user", "content": user_instruction}
                         ],
-                        temperature=0.1
+                        temperature=0.1,
+                        response_format={"type": "json_object"} # نجبر غروق يخرج جيسون نظيف ومقفل
                     )
                     
-                    result_text = chat_completion.choices[0].message.content
-                    st.info(result_text)
-                    full_report_content += result_text + "\n\n"
-                    
-        st.success("تم توليد التقييم الفني بنجاح!")
-        
-        st.write("#### 📥 تحميل دليل المقابلة الرسمي")
-        try:
-            pdf_data = generate_pdf_report(full_report_content)
-            st.download_button(
-                label="📥 تحميل مستند التقييم بصيغة PDF",
-                data=pdf_data,
-                file_name="Vetly_Interview_Guide.pdf",
-                mime="application/pdf"
-            )
-        except Exception as e:
-            st.error("حدث خطأ أثناء إعداد ملف الـ PDF، يرجى مراجعة تنسيق النصوص المخرجة.")
+                    try:
+                        import json
+                        result_json = json.loads(chat_completion.choices[0].message.content)
+                        
+                        html_output = f'<div class="candidate-box">'
+                        html_output += f'<div class="candidate-name">👤 المرشح: {result_json["candidate_name"]}</div>'
+                        
+                        for idx, item in enumerate(result_json["questions"]):
+                            html_output += f"""
+                            <div class="question-item">
+                                <div class="q-text">❓ السؤال {idx+1}: {item['q']}</div>
+                                <div class="a-text">💡 الإجابة النموذجية المتوقعة: {item['a']}</div>
+                            </div>
+                            """
+                        html_output += '</div>'
+                        
+                        st.markdown(html_output, unsafe_allow_html=True)
+                        
+                    except Exception as json_err:
+                        st.text(chat_completion.choices[0].message.content)
+                        
+        st.success("تم توليد التقييم الفني بنجاح! يمكنك الآن الضغط على (Ctrl + P) لطباعة الدليل أو حفظه كـ PDF من متصفحك مباشرة بشكل منسق!")
