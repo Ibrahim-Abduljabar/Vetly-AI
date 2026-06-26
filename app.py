@@ -106,7 +106,7 @@ if st.button("🔥 هندسة دليل الأسئلة الفخاخ فوراً"):
                         temperature=0.1
                     )
                     
-                    st.info(chat_completion.choices.message.content)
+                    st.info(chat_completion.choices[0].message.content)
                     
         st.success("تم توليد الأسئلة بنجاح!")
         st.write("#### 🔒 فتح ميزة تحميل 'دليل المدير التنفيذي للمقابلات' (PDF)")
