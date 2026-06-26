@@ -1,6 +1,7 @@
 import streamlit as st
 from groq import Groq 
 import pypdf
+import json
 
 st.set_page_config(page_title="Vetly AI", page_icon="🎯", layout="wide")
 st.title("🎯 Vetly AI")
@@ -87,10 +88,12 @@ if st.button("🔥 هندسة دليل المقابلة التنفيذي"):
                 font-weight: bold;
                 color: #212529;
                 margin-bottom: 5px;
+                font-size: 16px;
             }
             .a-text {
                 color: #28a745;
-                font-style: italic;
+                font-weight: 500;
+                font-size: 15px;
             }
         </style>
         """
@@ -98,8 +101,15 @@ if st.button("🔥 هندسة دليل المقابلة التنفيذي"):
         st.write("### 🎯 دليل الأسئلة المخفية الجاهز للمدير:")
         
         system_instruction = """
-        أنت مستشار توظيف تقني أول ومسؤول الفرز الفني في كبرى مجموعات الاستثمار العالمية. مهمتك هي تحليل السيرة الذاتية بدقة ومقارنتها بالوظيفة، واستخراج أسئلة فنية عميقة ومباغتة (Structural Interview Questions) لكشف عمق المعرفة الحقيقية للمرشح وتحديد ما إذا كان يملك خبرة عملية فعلية أم مجرد معلومات سطحية.
-        اجعل أسلوب الصياغة احترافياً، صارماً، وخالياً تماماً من الألفاظ الطفولية. قدم السؤال الفني متبوعاً مباشرة بالإجابة النموذجية القاطعة المختصرة التي تثبت كفاءة المرشح.
+        أنت مستشار توظيف تقني أول ومسؤول الفرز الفني في كبرى مجموعات الاستثمار العالمية. مهمتك هي تحليل السيرة الذاتية بدقة ومقارنتها بالوظيفة، واستخراج أسئلة فنية عميقة ومباغتة (Structural Interview Questions) لكشف عمق المعرفة الحقيقية للمرشح.
+        يجب أن تصيغ المخرجات بتنسيق JSON النظيف الصارم التالي فقط، وبدون أي نصوص ترحيبية أو تفسيرية خارج القوسين:
+        {
+            "candidate_name": "اسم المرشح الممرر لك",
+            "questions": [
+                {"q": "نص السؤال الفني المتقدم الأول", "a": "الرد التقني الحاسم المتوقع"},
+                {"q": "نص السؤال الفني المتقدم الثاني", "a": "الرد التقني الحاسم المتوقع"}
+            ]
+        }
         """
         
         for person in candidates_data:
@@ -116,12 +126,12 @@ if st.button("🔥 هندسة دليل المقابلة التنفيذي"):
                     بناءً على السيرة الذاتية المستخرجة: {cv_text}
                     ومتطلبات الوظيفة: {job_description}
                     
-                    يجب أن تصيغ المخرجات بتنسيق JSON النظيف التالي فقط (بدون أي نصوص خارج القوسين):
+                    تذكر صياغة المخرجات بتنسيق JSON النظيف التالي فقط وبدون أي كلمات زائدة:
                     {{
                         "candidate_name": "{person['name']}",
                         "questions": [
-                            {{"q": "نص السؤال الأول", "a": "نص الإجابة النموذجية الأولى"}},
-                            {{"q": "نص السؤال الثاني", "a": "نص الإجابة النموذجية الثانية"}}
+                            {{"q": "نص السؤال الفني الأول", "a": "نص الإجابة النموذجية الأولى"}},
+                            {{"q": "نص السؤال الفني الثاني", "a": "نص الإجابة النموذجية الثانية"}}
                         ]
                     }}
                     """
@@ -133,12 +143,11 @@ if st.button("🔥 هندسة دليل المقابلة التنفيذي"):
                             {"role": "user", "content": user_instruction}
                         ],
                         temperature=0.1,
-                        response_format={"type": "json_object"} # نجبر غروق يخرج جيسون نظيف ومقفل
+                        response_format={"type": "json_object"}
                     )
                     
                     try:
-                        import json
-                        result_json = json.loads(chat_completion.choices[0].message.content)
+                        result_json = json.loads(chat_completion.choices.message.content)
                         
                         html_output = f'<div class="candidate-box">'
                         html_output += f'<div class="candidate-name">👤 المرشح: {result_json["candidate_name"]}</div>'
@@ -155,6 +164,6 @@ if st.button("🔥 هندسة دليل المقابلة التنفيذي"):
                         st.markdown(html_output, unsafe_allow_html=True)
                         
                     except Exception as json_err:
-                        st.text(chat_completion.choices[0].message.content)
+                        st.text(chat_completion.choices.message.content)
                         
         st.success("تم توليد التقييم الفني بنجاح! يمكنك الآن الضغط على (Ctrl + P) لطباعة الدليل أو حفظه كـ PDF من متصفحك مباشرة بشكل منسق!")
