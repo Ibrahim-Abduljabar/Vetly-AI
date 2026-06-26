@@ -1,7 +1,6 @@
 import streamlit as st
 from groq import Groq 
 import pypdf
-import json
 
 st.set_page_config(page_title="Vetly AI", page_icon="🎯", layout="wide")
 st.title("🎯 Vetly AI")
@@ -56,60 +55,12 @@ if st.button("🔥 هندسة دليل المقابلة التنفيذي"):
     if not job_description:
         st.warning("الرجاء إدخال وصف الوظيفة أولاً في اللوحة الجانبية.")
     else:
-        html_style = """
-        <style>
-            .candidate-box {
-                background-color: #f8f9fa;
-                border-right: 5px solid #007bff;
-                padding: 20px;
-                border-radius: 5px;
-                margin-bottom: 25px;
-                direction: rtl;
-                text-align: right;
-                font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-                box-shadow: 0 2px 4px rgba(0,0,0,0.05);
-            }
-            .candidate-name {
-                color: #007bff;
-                font-size: 22px;
-                font-weight: bold;
-                margin-bottom: 15px;
-                border-bottom: 1px solid #dee2e6;
-                padding-bottom: 5px;
-            }
-            .question-item {
-                background-color: #ffffff;
-                padding: 12px;
-                border-radius: 4px;
-                margin-bottom: 10px;
-                border: 1px solid #e9ecef;
-            }
-            .q-text {
-                font-weight: bold;
-                color: #212529;
-                margin-bottom: 5px;
-                font-size: 16px;
-            }
-            .a-text {
-                color: #28a745;
-                font-weight: 500;
-                font-size: 15px;
-            }
-        </style>
-        """
-        st.markdown(html_style, unsafe_allow_html=True)
         st.write("### 🎯 دليل الأسئلة المخفية الجاهز للمدير:")
         
         system_instruction = """
-        أنت مستشار توظيف تقني أول ومسؤول الفرز الفني في كبرى مجموعات الاستثمار العالمية. مهمتك هي تحليل السيرة الذاتية بدقة ومقارنتها بالوظيفة، واستخراج أسئلة فنية عميقة ومباغتة (Structural Interview Questions) لكشف عمق المعرفة الحقيقية للمرشح.
-        يجب أن تصيغ المخرجات بتنسيق JSON النظيف الصارم التالي فقط، وبدون أي نصوص ترحيبية أو تفسيرية خارج القوسين:
-        {
-            "candidate_name": "اسم المرشح الممرر لك",
-            "questions": [
-                {"q": "نص السؤال الفني المتقدم الأول", "a": "الرد التقني الحاسم المتوقع"},
-                {"q": "نص السؤال الفني المتقدم الثاني", "a": "الرد التقني الحاسم المتوقع"}
-            ]
-        }
+        أنت مستشار توظيف تقني أول ومسؤول الفرز الفني في كبرى الشركات العالمية. مهمتك هي تحليل السيرة الذاتية بدقة ومقارنتها بالوظيفة، واستخراج أسئلة فنية عميقة ومباغتة لكشف عمق المعرفة الحقيقية للمرشح وتحديد ما إذا كان يملك خبرة عملية فعلية أم مجرد معلومات سطحية.
+        اجعل أسلوب الصياغة احترافياً، صارماً، وبنبرة عسكرية تقنية جادة باللغة العربية.
+        قدم السؤال الفني متبوعاً مباشرة بالإجابة النموذجية القاطعة المختصرة التي تثبت كفاءة المرشح.
         """
         
         for person in candidates_data:
@@ -123,17 +74,14 @@ if st.button("🔥 هندسة دليل المقابلة التنفيذي"):
                     
                     user_instruction = f"""
                     قم بتوليد عدد ({num_questions}) أسئلة فنية متقدمة بمستوى ({difficulty_level}) للمرشح ({person['name']}).
-                    بناءً على السيرة الذاتية المستخرجة: {cv_text}
+                    بناءً على السيرة الذاتية المستخرجة من الـ PDF: {cv_text}
                     ومتطلبات الوظيفة: {job_description}
                     
-                    تذكر صياغة المخرجات بتنسيق JSON النظيف التالي فقط وبدون أي كلمات زائدة:
-                    {{
-                        "candidate_name": "{person['name']}",
-                        "questions": [
-                            {{"q": "نص السؤال الفني الأول", "a": "نص الإجابة النموذجية الأولى"}},
-                            {{"q": "نص السؤال الفني الثاني", "a": "نص الإجابة النموذجية الثانية"}}
-                        ]
-                    }}
+                    التنسيق الصارم للمخرجات باللغة العربية (ابدأ باسم المرشح):
+                    👤 اسم المرشح: [اسم المرشح]
+                    
+                    ❓ السؤال [الرقم]: [نص السؤال الفني المتقدم والمباغت]
+                    💡 الإجابة النموذجية المتوقعة: [الجواب التقني الحاسم وعميق]
                     """
                     
                     chat_completion = client.chat.completions.create(
@@ -142,28 +90,9 @@ if st.button("🔥 هندسة دليل المقابلة التنفيذي"):
                             {"role": "system", "content": system_instruction},
                             {"role": "user", "content": user_instruction}
                         ],
-                        temperature=0.1,
-                        response_format={"type": "json_object"}
+                        temperature=0.1
                     )
                     
-                    try:
-                        result_json = json.loads(chat_completion.choices.message.content)
-                        
-                        html_output = f'<div class="candidate-box">'
-                        html_output += f'<div class="candidate-name">👤 المرشح: {result_json["candidate_name"]}</div>'
-                        
-                        for idx, item in enumerate(result_json["questions"]):
-                            html_output += f"""
-                            <div class="question-item">
-                                <div class="q-text">❓ السؤال {idx+1}: {item['q']}</div>
-                                <div class="a-text">💡 الإجابة النموذجية المتوقعة: {item['a']}</div>
-                            </div>
-                            """
-                        html_output += '</div>'
-                        
-                        st.markdown(html_output, unsafe_allow_html=True)
-                        
-                    except Exception as json_err:
-                        st.text(chat_completion.choices[0].message.content)
-                        
-        st.success("تم توليد التقييم الفني بنجاح! يمكنك الآن الضغط على (Ctrl + P) لطباعة الدليل أو حفظه كـ PDF من متصفحك مباشرة بشكل منسق!")
+                    st.info(chat_completion.choices[0].message.content)
+                    
+        st.success("تم توليد التقييم الفني بنجاح! الأداة مفتوحة لك مجاناً بالكامل.")
