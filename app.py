@@ -58,9 +58,18 @@ if st.button("🔥 هندسة دليل المقابلة التنفيذي"):
         st.write("### 🎯 دليل الأسئلة المخفية الجاهز للمدير:")
         
         system_instruction = """
-        أنت مستشار توظيف تقني أول ومسؤول الفرز الفني في كبرى الشركات العالمية. مهمتك هي تحليل السيرة الذاتية بدقة ومقارنتها بالوظيفة، واستخراج أسئلة فنية عميقة ومباغتة لكشف عمق المعرفة الحقيقية للمرشح وتحديد ما إذا كان يملك خبرة عملية فعلية أم مجرد معلومات سطحية.
-        اجعل أسلوب الصياغة احترافياً، صارماً، وبنبرة عسكرية تقنية جادة باللغة العربية.
-        قدم السؤال الفني متبوعاً مباشرة بالإجابة النموذجية القاطعة المختصرة التي تثبت كفاءة المرشح.
+        أنت مستشار توظيف تقني أول ومسؤول الفرز الفني في كبرى الشركات العالمية. مهمتك هي تحليل السيرة الذاتية بدقة ومقارنتها بالوظيفة، واستخراج أسئلة فنية عميقة ومباغتة لكشف خبرة المرشح الحقيقية.
+        يجب أن تصيغ مخرجاتك مباشرة ككود HTML منسق ومقفل بالكامل يحتوي على تصميم بطاقة تدعم اللغة العربية من اليمين إلى اليسار (RTL).
+        
+        استخدم هذا الهيكل تماماً لكل مرشح واطبعه ككود HTML جاهز دون كتابة أي كلمات ترحيبية خارجه:
+        <div style="background-color: #f8f9fa; border-right: 5px solid #007bff; padding: 20px; border-radius: 5px; margin-bottom: 25px; direction: rtl; text-align: right; font-family: sans-serif; box-shadow: 0 2px 4px rgba(0,0,0,0.05);">
+           <h3 style="color: #007bff; font-size: 22px; font-weight: bold; margin-bottom: 15px; border-bottom: 1px solid #dee2e6; padding-bottom: 5px;">👤 المرشح: [اسم المرشح]</h3>
+           
+           <div style="background-color: #ffffff; padding: 12px; border-radius: 4px; margin-bottom: 10px; border: 1px solid #e9ecef;">
+               <p style="font-weight: bold; color: #212529; margin-bottom: 5px; font-size: 16px;">❓ السؤال [الرقم]: [نص السؤال الفني المتقدم]</p>
+               <p style="color: #28a745; font-weight: 500; font-size: 15px; font-style: italic;">💡 الإجابة النموذجية المتوقعة: [الرد التقني الحاسم وعميق]</p>
+           </div>
+        </div>
         """
         
         for person in candidates_data:
@@ -77,11 +86,7 @@ if st.button("🔥 هندسة دليل المقابلة التنفيذي"):
                     بناءً على السيرة الذاتية المستخرجة من الـ PDF: {cv_text}
                     ومتطلبات الوظيفة: {job_description}
                     
-                    التنسيق الصارم للمخرجات باللغة العربية (ابدأ باسم المرشح):
-                    👤 اسم المرشح: [اسم المرشح]
-                    
-                    ❓ السؤال [الرقم]: [نص السؤال الفني المتقدم والمباغت]
-                    💡 الإجابة النموذجية المتوقعة: [الجواب التقني الحاسم وعميق]
+                    تذكر: صغ المخرجات بكود الـ HTML المنسق المذكور في النظام تماماً، ولا تكتب أي نصوص أخرى خارج وسوم الـ HTML.
                     """
                     
                     chat_completion = client.chat.completions.create(
@@ -93,6 +98,8 @@ if st.button("🔥 هندسة دليل المقابلة التنفيذي"):
                         temperature=0.1
                     )
                     
-                    st.info(chat_completion.choices[0].message.content)
+                    # قراءة النص الذي يحتوي على الـ HTML وعرضه حياً ومقفل بالـ [0]
+                    html_content = chat_completion.choices[0].message.content
+                    st.markdown(html_content, unsafe_allow_html=True)
                     
-        st.success("تم توليد التقييم الفني بنجاح! الأداة مفتوحة لك مجاناً بالكامل.")
+        st.success("تم توليد التقييم الفني بنجاح! يمكنك الآن الضغط على (Ctrl + P) لطباعة الدليل أو حفظه كـ PDF من متصفحك مباشرة بشكل منسق!")
